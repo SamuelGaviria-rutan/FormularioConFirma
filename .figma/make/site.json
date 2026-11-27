@@ -1,0 +1,10 @@
+{
+  "description": "Collects personal details and captures a digital signature through a responsive two-step form, making it easy for users to submit signed information on any device.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

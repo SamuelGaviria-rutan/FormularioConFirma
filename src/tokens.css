@@ -1,0 +1,32 @@
+/* hallmark: Civic Desk tokens for Ruta N */
+/* critique: brand green is a signal, not a background wash. */
+:root {
+  --font-body: 'Neue Haas Grotesk', 'Source Sans Pro';
+  --font-label: 'Neue Haas Grotesk', 'Source Sans Pro';
+  --font-action: 'Neue Haas Grotesk', 'Source Sans Pro';
+
+  --color-ink: #253d36;
+  --color-ink-soft: #66736e;
+  --color-ink-faint: rgb(23 34 31 / 48%);
+  --color-page: #f8faf7;
+  --color-surface: #ffffff;
+  --color-field: #f8fbf9;
+  --color-line: #dbe5e0;
+  --color-line-strong: #b9c9c1;
+  --color-track: #e5ece8;
+  --color-brand: #c0d400;
+  --color-brand-deep: #8a9900;
+  --color-brand-soft: rgb(192 212 0 / 10%);
+  --color-brand-border: rgb(192 212 0 / 60%);
+  --color-danger: #d93b3b;
+  --color-action-hover: #314d45;
+  --color-action-text: #f8faf7;
+  --color-focus: rgb(192 212 0 / 42%);
+  --color-shadow: rgb(37 61 54 / 8%);
+  --color-rule: rgb(219 229 224 / 70%);
+
+  --radius-surface: 1.5rem;
+  --radius-field: 1rem;
+  --radius-action: 1.25rem;
+  --shadow-surface: 0 2px 8px var(--color-shadow);
+}

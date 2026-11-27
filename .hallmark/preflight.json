@@ -1,0 +1,18 @@
+{
+  "scope": "app-screen",
+  "target": "two-step Ruta N registration form",
+  "preserve": [
+    "src/App.tsx form fields, validation, step navigation and signature canvas",
+    "public/assets/ruta-n-logo.png",
+    "Ruta N brand colors supplied by the user"
+  ],
+  "introduce": [
+    "Civic Desk utilitarian direction",
+    "tokenized colors and typography",
+    "Hallmark focus, motion and overflow safeguards"
+  ],
+  "material": {
+    "real": ["Ruta N logo", "two-step form", "signature interaction"],
+    "absent": ["photos", "metrics", "testimonials"]
+  }
+}
