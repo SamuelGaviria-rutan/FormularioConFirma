@@ -28,8 +28,7 @@
   input:focus-visible,
   select:focus-visible,
   canvas:focus-visible {
-    box-shadow: 0 0 0 3px var(--color-focus);
-    outline: 2px solid transparent;
+    outline: 2px solid var(--color-focus);
     outline-offset: 2px;
     transition: none;
   }
@@ -54,12 +53,13 @@
   }
 
   .support-copy,
-  .page-footer {
+  .page-footer,
+  .privacy-note {
     color: var(--color-ink-soft);
   }
 
   .step-label {
-    color: var(--color-brand-deep);
+    color: var(--color-ink);
     font-family: var(--font-label);
     font-size: 0.8125rem;
     font-weight: 700;
@@ -139,6 +139,47 @@
   }
 
   .field-input[aria-invalid='true'] {
+    border-color: var(--color-danger);
+  }
+
+  .policy-field {
+    margin-top: 1.5rem;
+  }
+
+  .policy-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    color: var(--color-ink);
+    cursor: pointer;
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  .policy-label a {
+    color: var(--color-ink);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .policy-checkbox {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 20px;
+    appearance: none;
+    border: 1.5px solid var(--color-ink);
+    border-radius: 4px;
+    background-color: transparent;
+    cursor: pointer;
+  }
+
+  .policy-checkbox:checked {
+    background-color: var(--color-ink);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='m5 10 3 3 7-7' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+
+  .policy-checkbox[aria-invalid='true'] {
     border-color: var(--color-danger);
   }
 
@@ -233,8 +274,8 @@
   }
 
   .success-message {
-    border-color: var(--color-brand-border);
-    background: var(--color-brand-soft);
+    border-color: var(--color-line);
+    background: var(--color-brand);
     color: var(--color-ink);
   }
 }
@@ -253,7 +294,6 @@
 
   .field-input {
     min-height: 2.75rem;
-    border-radius: 0.875rem;
     background-position: right 0.75rem center;
     padding: 0.625rem 2rem 0.625rem 0.75rem;
     font-size: 1rem;
@@ -276,7 +316,6 @@
   .primary-button,
   .secondary-button {
     min-height: 2.75rem;
-    border-radius: 1rem;
     padding: 0.625rem 1rem;
     font-size: 1rem;
   }

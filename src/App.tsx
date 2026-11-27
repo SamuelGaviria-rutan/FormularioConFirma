@@ -8,6 +8,7 @@ type FormData = {
   email: string;
   countryCode: string;
   phone: string;
+  acceptsPolicy: boolean;
 };
 
 const initialForm: FormData = {
@@ -18,7 +19,18 @@ const initialForm: FormData = {
   email: '',
   countryCode: '+57',
   phone: '',
+  acceptsPolicy: false,
 };
+
+const validatedFields: (keyof FormData)[] = [
+  'documentType',
+  'documentNumber',
+  'firstName',
+  'lastName',
+  'email',
+  'phone',
+  'acceptsPolicy',
+];
 
 const countries = [
   { code: '+57', short: 'CO' },
@@ -33,6 +45,7 @@ export default function App() {
   const [form, setForm] = useState<FormData>(initialForm);
   const [touched, setTouched] = useState<Partial<Record<keyof FormData, boolean>>>({});
   const [focusedField, setFocusedField] = useState<keyof FormData | null>(null);
+  const [showAllErrors, setShowAllErrors] = useState(false);
   const [hasSignature, setHasSignature] = useState(false);
   const [saved, setSaved] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -51,32 +64,46 @@ export default function App() {
     : /^[a-zA-Z0-9]{3,20}$/.test(form.documentNumber.trim());
   const emailIsValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim());
   const phoneIsValid = /^\d{6,15}$/.test(form.phone);
-  const isValid = requiredFieldsComplete && documentIsValid && emailIsValid && phoneIsValid;
+  const isValid = requiredFieldsComplete && documentIsValid && emailIsValid && phoneIsValid && form.acceptsPolicy;
 
   const fieldErrors: Partial<Record<keyof FormData, string>> = {
-    documentType: touched.documentType && focusedField !== 'documentType' && !form.documentType ? 'Selecciona un tipo de documento.' : undefined,
+    documentType:
+      touched.documentType && (showAllErrors || focusedField !== 'documentType') && !form.documentType
+        ? 'Selecciona un tipo de documento.'
+        : undefined,
     documentNumber:
-      touched.documentNumber && focusedField !== 'documentNumber' && !documentIsValid
+      touched.documentNumber && (showAllErrors || focusedField !== 'documentNumber') && !documentIsValid
         ? !form.documentType
           ? 'Selecciona primero el tipo de documento.'
           : documentRequiresNumbers
             ? 'Ingresa entre 3 y 20 números, sin letras.'
             : 'Usa entre 3 y 20 letras o números.'
         : undefined,
-    firstName: touched.firstName && focusedField !== 'firstName' && !form.firstName.trim() ? 'Ingresa tu nombre.' : undefined,
-    lastName: touched.lastName && focusedField !== 'lastName' && !form.lastName.trim() ? 'Ingresa tu apellido.' : undefined,
+    firstName:
+      touched.firstName && (showAllErrors || focusedField !== 'firstName') && !form.firstName.trim()
+        ? 'Ingresa tu nombre.'
+        : undefined,
+    lastName:
+      touched.lastName && (showAllErrors || focusedField !== 'lastName') && !form.lastName.trim()
+        ? 'Ingresa tu apellido.'
+        : undefined,
     email:
-      touched.email && focusedField !== 'email' && !emailIsValid
+      touched.email && (showAllErrors || focusedField !== 'email') && !emailIsValid
         ? 'Escribe un correo válido, por ejemplo nombre@correo.com.'
         : undefined,
     phone:
-      touched.phone && focusedField !== 'phone' && !phoneIsValid
+      touched.phone && (showAllErrors || focusedField !== 'phone') && !phoneIsValid
         ? 'El celular debe tener entre 6 y 15 números.'
+        : undefined,
+    acceptsPolicy:
+      touched.acceptsPolicy && (showAllErrors || focusedField !== 'acceptsPolicy') && !form.acceptsPolicy
+        ? 'Debes aceptar la política para continuar.'
         : undefined,
   };
 
   const updateField = (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = event.target;
+    const nextValue = event.target instanceof HTMLInputElement && event.target.type === 'checkbox' ? event.target.checked : value;
     setForm((current) => {
       if (name === 'documentType') {
         const numericType = value === 'cc' || value === 'ce';
@@ -89,7 +116,9 @@ export default function App() {
 
       return {
         ...current,
-        [name]:
+        [name]: name === 'acceptsPolicy'
+          ? nextValue
+          :
           name === 'documentNumber'
             ? documentRequiresNumbers
               ? value.replace(/\D/g, '')
@@ -99,6 +128,32 @@ export default function App() {
               : value,
       };
     });
+  };
+
+  const submitPersonalData = () => {
+    if (isValid) {
+      setStep(2);
+      return;
+    }
+
+    setShowAllErrors(true);
+    setTouched(Object.fromEntries(validatedFields.map((field) => [field, true])));
+
+    const firstInvalidField = [
+      !form.documentType && 'documentType',
+      !documentIsValid && 'documentNumber',
+      !form.firstName.trim() && 'firstName',
+      !form.lastName.trim() && 'lastName',
+      !emailIsValid && 'email',
+      !phoneIsValid && 'phone',
+      !form.acceptsPolicy && 'acceptsPolicy',
+    ].find(Boolean);
+
+    if (firstInvalidField) {
+      requestAnimationFrame(() => {
+        document.querySelector<HTMLElement>(`[name="${firstInvalidField}"]`)?.focus();
+      });
+    }
   };
 
   const markAsTouched = (event: FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -182,8 +237,8 @@ export default function App() {
   return (
     <main className="page-shell min-h-[100dvh] px-4 pb-3 pt-6 sm:px-8 sm:py-6">
       <div className="mx-auto max-w-[880px] sm:flex sm:min-h-[calc(100dvh-3rem)] sm:flex-col sm:justify-center">
-        <header className="mb-3 sm:mb-5">
-          <img src="/assets/ruta-n-logo.png" alt="Ruta N" className="h-auto w-[82px] sm:w-[96px]" />
+        <header className="mb-6 sm:mb-8">
+          <img src="/assets/ruta-n-logo.png" alt="Ruta N" className="h-auto min-w-[100px] w-[100px] sm:w-[120px]" />
         </header>
 
         <section>
@@ -213,9 +268,10 @@ export default function App() {
             {step === 1 ? (
               <form
                 className="pt-4 sm:pt-7"
+                noValidate
                 onSubmit={(event) => {
                   event.preventDefault();
-                  if (isValid) setStep(2);
+                  submitPersonalData();
                 }}
               >
                 <div className="grid grid-cols-1 gap-y-4 sm:grid-cols-2 sm:gap-x-5 sm:gap-y-5">
@@ -233,19 +289,19 @@ export default function App() {
 
                   <label className="field-label">
                     <span>Número de documento <b>*</b></span>
-                    <input className="field-input" name="documentNumber" value={form.documentNumber} onChange={updateField} onFocus={markAsFocused} onBlur={markAsTouched} inputMode={documentRequiresNumbers ? 'numeric' : 'text'} aria-invalid={Boolean(fieldErrors.documentNumber)} aria-describedby={fieldErrors.documentNumber ? 'documentNumber-message' : undefined} placeholder="Escribe aquí" minLength={3} maxLength={20} required />
+                    <input className="field-input" name="documentNumber" value={form.documentNumber} onChange={updateField} onFocus={markAsFocused} onBlur={markAsTouched} inputMode={documentRequiresNumbers ? 'numeric' : 'text'} aria-invalid={Boolean(fieldErrors.documentNumber)} aria-describedby={fieldErrors.documentNumber ? 'documentNumber-message' : undefined} minLength={3} maxLength={20} required />
                     {feedbackFor('documentNumber')}
                   </label>
 
                   <label className="field-label">
                     <span>Nombre <b>*</b></span>
-                    <input className="field-input" name="firstName" value={form.firstName} onChange={updateField} onFocus={markAsFocused} onBlur={markAsTouched} aria-invalid={Boolean(fieldErrors.firstName)} aria-describedby={fieldErrors.firstName ? 'firstName-message' : undefined} placeholder="Escribe aquí" autoComplete="given-name" required />
+                    <input className="field-input" name="firstName" value={form.firstName} onChange={updateField} onFocus={markAsFocused} onBlur={markAsTouched} aria-invalid={Boolean(fieldErrors.firstName)} aria-describedby={fieldErrors.firstName ? 'firstName-message' : undefined} autoComplete="given-name" required />
                     {feedbackFor('firstName')}
                   </label>
 
                   <label className="field-label">
                     <span>Apellido <b>*</b></span>
-                    <input className="field-input" name="lastName" value={form.lastName} onChange={updateField} onFocus={markAsFocused} onBlur={markAsTouched} aria-invalid={Boolean(fieldErrors.lastName)} aria-describedby={fieldErrors.lastName ? 'lastName-message' : undefined} placeholder="Escribe aquí" autoComplete="family-name" required />
+                    <input className="field-input" name="lastName" value={form.lastName} onChange={updateField} onFocus={markAsFocused} onBlur={markAsTouched} aria-invalid={Boolean(fieldErrors.lastName)} aria-describedby={fieldErrors.lastName ? 'lastName-message' : undefined} autoComplete="family-name" required />
                     {feedbackFor('lastName')}
                   </label>
 
@@ -271,15 +327,40 @@ export default function App() {
                   </fieldset>
                 </div>
 
+                <div className="policy-field">
+                  <label className="policy-label">
+                    <input
+                      className="policy-checkbox"
+                      type="checkbox"
+                      name="acceptsPolicy"
+                      checked={form.acceptsPolicy}
+                      onChange={updateField}
+                      onFocus={markAsFocused}
+                      onBlur={markAsTouched}
+                      aria-invalid={Boolean(fieldErrors.acceptsPolicy)}
+                      aria-describedby={fieldErrors.acceptsPolicy ? 'acceptsPolicy-message' : undefined}
+                      required
+                    />
+                    <span>
+                      Autorizo a Ruta N a tratar mis datos personales según su{' '}
+                      <a href="[PEGAR URL]" target="_blank" rel="noreferrer">
+                        Política de tratamiento de datos
+                      </a>
+                      .
+                    </span>
+                  </label>
+                  {feedbackFor('acceptsPolicy')}
+                </div>
+
                 <div className="form-actions">
-                  <button type="submit" disabled={!isValid} className="primary-button ml-auto w-full sm:w-auto">
+                  <button type="submit" className="primary-button ml-auto w-full sm:w-auto">
                     Continuar
                   </button>
                 </div>
               </form>
             ) : (
               <div className="pt-4 sm:pt-7">
-                <div className="signature-field relative overflow-clip rounded-2xl border border-dashed">
+                <div className="signature-field relative overflow-clip rounded-lg border border-dashed">
                   {!hasSignature && (
                     <div className="pointer-events-none absolute inset-0 grid place-items-center">
                       <div className="signature-placeholder text-center">
@@ -293,7 +374,7 @@ export default function App() {
                   <canvas
                     ref={canvasRef}
                     aria-label="Área para dibujar la firma"
-                    className="h-[220px] w-full cursor-crosshair touch-none sm:h-[270px]"
+                    className="h-[300px] w-full cursor-crosshair touch-none sm:h-[270px]"
                     onPointerDown={startDrawing}
                     onPointerMove={draw}
                     onPointerUp={() => { drawingRef.current = false; }}
@@ -310,7 +391,7 @@ export default function App() {
                 </div>
 
                 {saved && (
-                  <div role="status" className="success-message mt-5 rounded-2xl border px-4 py-3 text-sm font-semibold">
+                  <div role="status" className="success-message mt-5 rounded-lg border px-4 py-3 text-sm font-semibold">
                     Tu información y firma se guardaron correctamente.
                   </div>
                 )}
@@ -323,6 +404,7 @@ export default function App() {
                     {saved ? 'Guardado' : 'Guardar'}
                   </button>
                 </div>
+                <p className="privacy-note mt-3 text-xs">Tratamos tus datos de forma segura y responsable.</p>
               </div>
             )}
           </div>
